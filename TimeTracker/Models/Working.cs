@@ -10,6 +10,8 @@ namespace TimeTracker.Models
 
         public string UserId { get; set; }
 
+        public ApplicationUser ApplicationUser { get; set; }
+
         [Required]
         public DateTime StartTime { get; set; }
 

@@ -48,40 +48,21 @@ namespace TimeTracker.Controllers
         }
 
         // GET: Workings/Create
-        public IActionResult Create(int taskId = 0)
-        {
 
-            ViewData["TaskId"] = new SelectList(_workContext.UserTasks.Where(m => m.Status == "Not solved"), "Id", "Name");
-            if (_workContext.UserTasks.FirstOrDefault(m => m.Id == taskId) != null)
-            {
-                Working working = new Working
-                {
-                    TaskId = taskId,
-                };
-                return View(working);
-            }
-            return View();
-        }
 
         // POST: Workings/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to, for 
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,StartTime,EndTime,TaskId")] Working working)
+        public async Task<IActionResult> Start([Bind("Id,StartTime,EndTime,TaskId")] Working working, int taskId)
         {
-            if (ModelState.IsValid)
-            {
-                working.UserId = _workContext.UserId;
-                Models.Task Task = _workContext.UserTasks.FirstOrDefault(m => m.Id == working.TaskId);
-                Task.Status = "In progress";
-                working.StartTime = DateTime.Now;
-                _context.Add(working);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            ViewData["TaskId"] = new SelectList(_context.Tasks, "Id", "Name", working.TaskId);
-            return View(working);
+            working.UserId = _workContext.UserId;
+            working.TaskId = taskId;
+            Models.Task Task = _workContext.UserAndContributedTasks.FirstOrDefault(m => m.Id == working.TaskId);
+            Task.Status = "In progress";
+            working.StartTime = DateTime.Now;
+            _context.Add(working);
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: Workings/Edit/5
@@ -97,7 +78,7 @@ namespace TimeTracker.Controllers
             {
                 return NotFound();
             }
-            ViewData["TaskId"] = new SelectList(_workContext.UserTasks, "Id", "Name", working.TaskId);
+            ViewData["TaskId"] = new SelectList(_workContext.UserAndContributedTasks, "Id", "Name", working.TaskId);
             return View(working);
         }
 
@@ -135,7 +116,7 @@ namespace TimeTracker.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["TaskId"] = new SelectList(_workContext.UserTasks, "Id", "Name", working.TaskId);
+            ViewData["TaskId"] = new SelectList(_workContext.UserAndContributedTasks, "Id", "Name", working.TaskId);
             return View(working);
         }
 
@@ -161,7 +142,7 @@ namespace TimeTracker.Controllers
                 try
                 {
                     working.EndTime = DateTime.Now;
-                    Models.Task Task = await _workContext.UserTasks.FirstOrDefaultAsync(m => m.Id == working.TaskId);
+                    Models.Task Task = await _workContext.UserAndContributedTasks.FirstOrDefaultAsync(m => m.Id == working.TaskId);
                     Task.Status = "Solved";
                     working.UserId = _workContext.UserId;
                     _context.Update(working);
@@ -180,7 +161,7 @@ namespace TimeTracker.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["TaskId"] = new SelectList(_workContext.UserTasks, "Id", "Name", working.TaskId);
+            ViewData["TaskId"] = new SelectList(_workContext.UserAndContributedTasks, "Id", "Name", working.TaskId);
             return View(working);
         }
 

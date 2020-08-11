@@ -29,16 +29,18 @@ namespace TimeTracker.Controllers
 
 
         // GET: Tasks
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int taskTypeId)
         {
-            var Tasks = _workContext.UserTasks;
-            var applicationDbContext = Tasks.Include(t => t.TaskType);
-            return View(await applicationDbContext.ToListAsync());
+            var taskType = _workContext.UserAndContributedTaskTypes.Include(t => t.Tasks).FirstOrDefault(t => t.Id == taskTypeId);
+            var applicationDbContext = taskType.Tasks;
+            ViewBag.CurrentUserId = _workContext.UserId;
+            ViewBag.TaskTypeId = taskTypeId;
+            return View(applicationDbContext);
         }
 
-        public async Task<IActionResult> Archive()
+        public async Task<IActionResult> Archive(int taskTypeId)
         {
-            return await Index();
+            return await Index(taskTypeId);
         }
 
         // GET: Tasks/Details/5
@@ -49,7 +51,7 @@ namespace TimeTracker.Controllers
                 return NotFound();
             }
 
-            var task = await _workContext.UserTasks
+            var task = await _workContext.UserAndContributedTasks
                 .Include(t => t.TaskType)
                 .Include(t => t.Workings)
                 .FirstOrDefaultAsync(m => m.Id == id);
@@ -62,9 +64,9 @@ namespace TimeTracker.Controllers
         }
 
         // GET: Tasks/Create
-        public IActionResult Create()
+        public IActionResult Create(int taskTypeId)
         {
-            ViewData["TaskTypeId"] = new SelectList(_workContext.UserTaskTypes, "Id", "Name");
+            ViewBag.TaskTypeId = taskTypeId;
             return View();
         }
 
@@ -74,17 +76,17 @@ namespace TimeTracker.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Name,TaskTypeId,Status")] Task task)
+        public async Task<IActionResult> Create([Bind("Name,TaskTypeId,Status")] Task task, int taskTypeId)
         {
             if (ModelState.IsValid)
             {
                 task.Status = "Not solved";
                 task.UserId = _workContext.UserId;
+                task.TaskTypeId = taskTypeId;
                 _context.Add(task);
                 await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { task.TaskTypeId });
             }
-            ViewData["TaskTypeId"] = new SelectList(_workContext.UserTaskTypes, "Id", "Name", task.TaskTypeId);
             return View(task);
         }
 
@@ -99,11 +101,11 @@ namespace TimeTracker.Controllers
             var task = await _workContext.UserTasks
                 .FirstOrDefaultAsync(m => m.Id == id);
 
+
             if (task == null)
             {
                 return NotFound();
             }
-            ViewData["TaskTypeId"] = new SelectList(_workContext.UserTaskTypes, "Id", "Name", task.TaskTypeId);
             return View(task);
         }
 
@@ -140,7 +142,6 @@ namespace TimeTracker.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["TaskTypeId"] = new SelectList(_workContext.UserTaskTypes, "Id", "Name", task.TaskTypeId);
             return View(task);
         }
 

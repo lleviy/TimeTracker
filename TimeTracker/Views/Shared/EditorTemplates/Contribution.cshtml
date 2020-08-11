@@ -1,0 +1,11 @@
+﻿@model TimeTracker.Models.Contribution
+<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+<input type="hidden" asp-for="Id" />
+<input type="hidden" asp-for="ContributionConfirmed" />
+<div class="form-group">
+    <label asp-for="ContributorEmail" class="control-label"></label>
+    <input asp-for="ContributorEmail" class="form-control" />
+    <span asp-validation-for="ContributorEmail" class="text-danger"></span>
+    <input class="btnDel" type="button" onclick="removeContributor(this)" value="Remove" />
+</div>
+

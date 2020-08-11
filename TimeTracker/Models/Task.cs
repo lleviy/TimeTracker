@@ -14,6 +14,8 @@ namespace TimeTracker.Models
 
         public string UserId { get; set; }
 
+        public ApplicationUser ApplicationUser { get; set; }
+
         [Required]
         [MaxLength(300)]
         public string Name { get; set; }
@@ -27,5 +29,6 @@ namespace TimeTracker.Models
 
         [DefaultValue("Not solved")]
         public string Status { get; set; }
+
     }
 }

@@ -4,11 +4,21 @@
 
     <div class="text-center">
         <h1 class="display-4">Welcome</h1>
-        <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+        <p>Create your projects, invite contributors and solve tasks together with TimeTracker.</p>
         @if (User.Identity.IsAuthenticated)
+
         {
-        <a href='@Url.Action("Index", "Tasks")'>Tasks</a>
-        <a href='@Url.Action("Index", "TaskTypes")'>Task types</a>
-        <a href='@Url.Action("Archive", "Tasks")'>Archive</a>
+            @foreach (var item in ViewBag.Contributions)
+            {
+                @if (item.ContributionConfirmed == false)
+                {
+                    <div class="box-shadow">
+                        <p>User @item.TaskType.User.Email invites you to collaborate on @item.TaskType.Name.</p>
+                        @Html.ActionLink("Accept", "Accept", "Contributions", new { userId = @item.UserId, taskTypeId = @item.TaskTypeId })
+                        @(" or ")
+                        @Html.ActionLink("Reject", "Reject", "Contributions", new { userId = @item.UserId, taskTypeId = @item.TaskTypeId })
+                    </div>
+                }
+            }
         }
     </div>

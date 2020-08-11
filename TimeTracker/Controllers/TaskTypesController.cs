@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using TimeTracker.Data;
 using TimeTracker.Models;
 using Microsoft.AspNet.Identity;
+using System;
+using System.Collections.Generic;
 
 namespace TimeTracker.Controllers
 {
@@ -19,10 +21,36 @@ namespace TimeTracker.Controllers
             _workContext = workContext;
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> AddContributor([Bind("Contributions")] TaskType taskType)
+        {
+            taskType.Contributions.Add(new Contribution());
+            return PartialView("Contributions", taskType);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> RemoveContributor([Bind("Contributions")] TaskType taskType, string contributorEmail)
+        {
+            ModelState.Clear();
+            taskType.Contributions.RemoveAll(c => c.ContributorEmail == contributorEmail);
+            return PartialView("Contributions", taskType);
+        }
+
+
         // GET: TaskTypes
         public async Task<IActionResult> Index()
         {
-            var TaskTypes = _workContext.UserTaskTypes;
+            var TaskTypes = _workContext.UserAndContributedTaskTypes;
+            ViewBag.CurrentUserId = _workContext.UserId;
+            return View(await TaskTypes.ToListAsync());
+        }
+
+        public async Task<IActionResult> Archive()
+        {
+            var TaskTypes = _workContext.UserAndContributedTaskTypes
+                .Where(t => t.Tasks.Any(t => t.Status == "Solved"));
             return View(await TaskTypes.ToListAsync());
         }
 
@@ -34,7 +62,7 @@ namespace TimeTracker.Controllers
                 return NotFound();
             }
 
-            var taskType = await _workContext.UserTaskTypes
+            var taskType = await _workContext.UserAndContributedTaskTypes
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (taskType == null)
             {
@@ -47,7 +75,8 @@ namespace TimeTracker.Controllers
         // GET: TaskTypes/Create
         public IActionResult Create()
         {
-            return View();
+            var model = new TaskType();
+            return View(model);
         }
 
         // POST: TaskTypes/Create
@@ -55,11 +84,24 @@ namespace TimeTracker.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name")] TaskType taskType)
+        public async Task<IActionResult> Create([Bind("Id,Name,Status,Contributions")] TaskType taskType)
         {
             if (ModelState.IsValid)
             {
+                taskType.Status = "Not solved";
                 taskType.UserId = _workContext.UserId;
+                for (int i = 0; i < taskType.Contributions.Count; i++) {
+                    var contributor = _context.ApplicationUsers.FirstOrDefault(u => u.Email == taskType.Contributions[i].ContributorEmail);
+                    if (contributor == null)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        taskType.Contributions[i].UserId = contributor.Id;
+                        taskType.Contributions[i].TaskTypeId = taskType.Id;
+                    }
+                }
                 _context.Add(taskType);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
@@ -88,7 +130,7 @@ namespace TimeTracker.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name")] TaskType taskType)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Status,Contributions")] TaskType taskType)
         {
             if (id != taskType.Id)
             {
@@ -100,7 +142,29 @@ namespace TimeTracker.Controllers
                 try
                 {
                     taskType.UserId = _workContext.UserId;
-                    _context.Update(taskType);
+
+                    for (int i = 0; i < taskType.Contributions.Count; i++)
+                    {
+                        var contributor = _context.ApplicationUsers.FirstOrDefault(u => u.Email == taskType.Contributions[i].ContributorEmail);
+                        if (contributor == null)
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            taskType.Contributions[i].UserId = contributor.Id;
+                            taskType.Contributions[i].TaskTypeId = taskType.Id;
+                            _context.Update(taskType.Contributions[i]);
+                        }
+                    }
+
+                    List<Contribution> contributions = _context.Contributions.Where(c => c.TaskTypeId == taskType.Id).ToList();
+                    for (int i = 0; i < contributions.Count(); i++) { 
+                        if (!taskType.Contributions.Exists(c2 => c2.Id == contributions[i].Id)) { 
+                            _context.Contributions.Remove(contributions[i]);
+                        }
+                    }
+
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
@@ -149,20 +213,6 @@ namespace TimeTracker.Controllers
         }
 
 
-        public async Task<IActionResult> Collaborate(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var taskType = await _workContext.UserTaskTypes.FirstOrDefaultAsync(m => m.Id == id);
-            if (taskType == null)
-            {
-                return NotFound();
-            }
-            return View(taskType);
-        }
 
         private bool TaskTypeExists(int id)
         {
