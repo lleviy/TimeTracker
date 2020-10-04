@@ -12,6 +12,7 @@ using TimeTracker.Data;
 using TimeTracker.Models;
 using Task = TimeTracker.Models.Task;
 using Microsoft.AspNetCore.Http;
+using TimeTracker.ViewModels;
 
 namespace TimeTracker.Controllers
 {
@@ -29,18 +30,21 @@ namespace TimeTracker.Controllers
 
 
         // GET: Tasks
-        public async Task<IActionResult> Index(int taskTypeId)
+        public async Task<IActionResult> Index(int projectId)
         {
-            var taskType = _workContext.UserAndContributedTaskTypes.Include(t => t.Tasks).FirstOrDefault(t => t.Id == taskTypeId);
-            var applicationDbContext = taskType.Tasks;
+            var project = _workContext.UserAndContributedProjects.Include(t => t.Tasks).FirstOrDefault(t => t.Id == projectId);
+            var tasks = project.Tasks.Where(t => t.Status == "Not solved");
             ViewBag.CurrentUserId = _workContext.UserId;
-            ViewBag.TaskTypeId = taskTypeId;
-            return View(applicationDbContext);
+            ProjectTasksViewModel ptvm = new ProjectTasksViewModel { Project = project, Tasks = tasks };
+            return View(ptvm);
         }
 
-        public async Task<IActionResult> Archive(int taskTypeId)
+        public async Task<IActionResult> Archive(int projectId)
         {
-            return await Index(taskTypeId);
+            var project = _workContext.UserAndContributedProjects.Include(t => t.Tasks).FirstOrDefault(t => t.Id == projectId);
+            var tasks = project.Tasks.Where(t => t.Status == "Solved");
+            ProjectTasksViewModel ptvm = new ProjectTasksViewModel { Project = project, Tasks = tasks };
+            return View(ptvm);
         }
 
         // GET: Tasks/Details/5
@@ -52,7 +56,7 @@ namespace TimeTracker.Controllers
             }
 
             var task = await _workContext.UserAndContributedTasks
-                .Include(t => t.TaskType)
+                .Include(t => t.Project)
                 .Include(t => t.Workings)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (task == null)
@@ -64,10 +68,10 @@ namespace TimeTracker.Controllers
         }
 
         // GET: Tasks/Create
-        public IActionResult Create(int taskTypeId)
+        public IActionResult Create(int projectId)
         {
-            ViewBag.TaskTypeId = taskTypeId;
-            return View();
+            TaskCreateViewModel tvm = new TaskCreateViewModel(projectId);
+            return View(tvm);
         }
 
 
@@ -76,16 +80,15 @@ namespace TimeTracker.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Name,TaskTypeId,Status")] Task task, int taskTypeId)
+        public async Task<IActionResult> Create(Task task)
         {
             if (ModelState.IsValid)
             {
                 task.Status = "Not solved";
                 task.UserId = _workContext.UserId;
-                task.TaskTypeId = taskTypeId;
                 _context.Add(task);
                 await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index), new { task.TaskTypeId });
+                return RedirectToAction(nameof(Index), new { task.ProjectId });
             }
             return View(task);
         }
@@ -101,12 +104,13 @@ namespace TimeTracker.Controllers
             var task = await _workContext.UserTasks
                 .FirstOrDefaultAsync(m => m.Id == id);
 
-
             if (task == null)
             {
                 return NotFound();
             }
-            return View(task);
+
+            TaskEditViewModel tvm = new TaskEditViewModel(task.Id, task.Name, task.Status, task.ProjectId);
+            return View(tvm);
         }
 
         // POST: Tasks/Edit/5
@@ -114,13 +118,8 @@ namespace TimeTracker.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,TaskTypeId,Status")] Task task)
+        public async Task<IActionResult> Edit(Task task)
         {
-            if (id != task.Id)
-            {
-                return NotFound();
-            }
-
             if (ModelState.IsValid)
             {
                 try
@@ -140,7 +139,7 @@ namespace TimeTracker.Controllers
                         throw;
                     }
                 }
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { projectId = task.ProjectId });
             }
             return View(task);
         }
@@ -154,7 +153,7 @@ namespace TimeTracker.Controllers
             }
 
             var task = await _workContext.UserTasks
-                .Include(t => t.TaskType)
+                .Include(t => t.Project)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (task == null)
             {

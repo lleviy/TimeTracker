@@ -26,7 +26,7 @@ namespace TimeTracker.Controllers
 
         public IActionResult Index()
         {
-            var UserContributions = _workContext.UserContributions.Include(c => c.TaskType).Include(c => c.TaskType.User);
+            var UserContributions = _workContext.UserContributions.Include(c => c.Project).Include(c => c.Project.User);
             ViewBag.Contributions = UserContributions;
             return View();
         }

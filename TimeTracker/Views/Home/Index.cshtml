@@ -13,10 +13,10 @@
                 @if (item.ContributionConfirmed == false)
                 {
                     <div class="box-shadow">
-                        <p>User @item.TaskType.User.Email invites you to collaborate on @item.TaskType.Name.</p>
-                        @Html.ActionLink("Accept", "Accept", "Contributions", new { userId = @item.UserId, taskTypeId = @item.TaskTypeId })
+                        <p>User @item.Project.User.Email invites you to collaborate on @item.Project.Name.</p>
+                        @Html.ActionLink("Accept", "Accept", "Contributions", new { userId = @item.UserId, projectId = @item.ProjectId })
                         @(" or ")
-                        @Html.ActionLink("Reject", "Reject", "Contributions", new { userId = @item.UserId, taskTypeId = @item.TaskTypeId })
+                        @Html.ActionLink("Reject", "Reject", "Contributions", new { userId = @item.UserId, projectId = @item.ProjectId })
                     </div>
                 }
             }

@@ -13,8 +13,8 @@ namespace TimeTracker.Models
         public string UserId { get; set; }
         public ApplicationUser ApplicationUser { get; set; }
 
-        public int TaskTypeId { get; set; }
-        public TaskType TaskType { get; set; }
+        public int ProjectId { get; set; }
+        public Project Project { get; set; }
 
         [DataType(DataType.EmailAddress)]
         [DisplayName("Contributor e-mail")]

@@ -6,8 +6,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace TimeTracker.Models
 {
-    [DisplayName("Task type")]
-    public class TaskType
+    public class Project
     {
         public int Id { get; set; }
 
@@ -26,7 +25,7 @@ namespace TimeTracker.Models
 
         public virtual List<Task> Tasks { get; set; }
 
-        public TaskType()
+        public Project()
         {
             Contributions = new List<Contribution>();
         }

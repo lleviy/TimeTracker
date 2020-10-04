@@ -10,12 +10,12 @@ using System.Collections.Generic;
 
 namespace TimeTracker.Controllers
 {
-    public class TaskTypesController : Controller
+    public class ProjectsController : Controller
     {
         private readonly ApplicationDbContext _context;
         private readonly IWorkContext _workContext;
 
-        public TaskTypesController(ApplicationDbContext context, IWorkContext workContext)
+        public ProjectsController(ApplicationDbContext context, IWorkContext workContext)
         {
             _context = context;
             _workContext = workContext;
@@ -23,38 +23,38 @@ namespace TimeTracker.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> AddContributor([Bind("Contributions")] TaskType taskType)
+        public async Task<ActionResult> AddContributor([Bind("Contributions")] Project project)
         {
-            taskType.Contributions.Add(new Contribution());
-            return PartialView("Contributions", taskType);
+            project.Contributions.Add(new Contribution());
+            return PartialView("Contributions", project);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> RemoveContributor([Bind("Contributions")] TaskType taskType, string contributorEmail)
+        public async Task<ActionResult> RemoveContributor([Bind("Contributions")] Project project, string contributorEmail)
         {
             ModelState.Clear();
-            taskType.Contributions.RemoveAll(c => c.ContributorEmail == contributorEmail);
-            return PartialView("Contributions", taskType);
+            project.Contributions.RemoveAll(c => c.ContributorEmail == contributorEmail);
+            return PartialView("Contributions", project);
         }
 
 
-        // GET: TaskTypes
+        // GET: Projects
         public async Task<IActionResult> Index()
         {
-            var TaskTypes = _workContext.UserAndContributedTaskTypes;
+            var Projects = _workContext.UserAndContributedProjects.Where(p => p.Status == "Not solved");
             ViewBag.CurrentUserId = _workContext.UserId;
-            return View(await TaskTypes.ToListAsync());
+            return View(await Projects.ToListAsync());
         }
 
         public async Task<IActionResult> Archive()
         {
-            var TaskTypes = _workContext.UserAndContributedTaskTypes
-                .Where(t => t.Tasks.Any(t => t.Status == "Solved"));
-            return View(await TaskTypes.ToListAsync());
+            var Projects = _workContext.UserAndContributedProjects
+                .Where(t => t.Tasks.Any(t => t.Status == "Solved") || t.Status == "Solved");
+            return View(await Projects.ToListAsync());
         }
 
-        // GET: TaskTypes/Details/5
+        // GET: Projects/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -62,54 +62,54 @@ namespace TimeTracker.Controllers
                 return NotFound();
             }
 
-            var taskType = await _workContext.UserAndContributedTaskTypes
+            var project = await _workContext.UserAndContributedProjects
                 .FirstOrDefaultAsync(m => m.Id == id);
-            if (taskType == null)
+            if (project == null)
             {
                 return NotFound();
             }
 
-            return View(taskType);
+            return View(project);
         }
 
-        // GET: TaskTypes/Create
+        // GET: Projects/Create
         public IActionResult Create()
         {
-            var model = new TaskType();
+            var model = new Project();
             return View(model);
         }
 
-        // POST: TaskTypes/Create
+        // POST: Projects/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to, for 
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,Status,Contributions")] TaskType taskType)
+        public async Task<IActionResult> Create([Bind("Id,Name,Status,Contributions")] Project project)
         {
             if (ModelState.IsValid)
             {
-                taskType.Status = "Not solved";
-                taskType.UserId = _workContext.UserId;
-                for (int i = 0; i < taskType.Contributions.Count; i++) {
-                    var contributor = _context.ApplicationUsers.FirstOrDefault(u => u.Email == taskType.Contributions[i].ContributorEmail);
+                project.Status = "Not solved";
+                project.UserId = _workContext.UserId;
+                for (int i = 0; i < project.Contributions.Count; i++) {
+                    var contributor = _context.ApplicationUsers.FirstOrDefault(u => u.Email == project.Contributions[i].ContributorEmail);
                     if (contributor == null)
                     {
                         continue;
                     }
                     else
                     {
-                        taskType.Contributions[i].UserId = contributor.Id;
-                        taskType.Contributions[i].TaskTypeId = taskType.Id;
+                        project.Contributions[i].UserId = contributor.Id;
+                        project.Contributions[i].ProjectId = project.Id;
                     }
                 }
-                _context.Add(taskType);
+                _context.Add(project);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            return View(taskType);
+            return View(project);
         }
 
-        // GET: TaskTypes/Edit/5
+        // GET: Projects/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -117,22 +117,22 @@ namespace TimeTracker.Controllers
                 return NotFound();
             }
 
-            var taskType = await _workContext.UserTaskTypes.FirstOrDefaultAsync(m => m.Id == id);
-            if (taskType == null)
+            var project = await _workContext.UserProjects.FirstOrDefaultAsync(m => m.Id == id);
+            if (project == null)
             {
                 return NotFound();
             }
-            return View(taskType);
+            return View(project);
         }
 
-        // POST: TaskTypes/Edit/5
+        // POST: Projects/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to, for 
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Status,Contributions")] TaskType taskType)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Status,Contributions")] Project project)
         {
-            if (id != taskType.Id)
+            if (id != project.Id)
             {
                 return NotFound();
             }
@@ -141,26 +141,27 @@ namespace TimeTracker.Controllers
             {
                 try
                 {
-                    taskType.UserId = _workContext.UserId;
-
-                    for (int i = 0; i < taskType.Contributions.Count; i++)
+                    project.UserId = _workContext.UserId;
+                    _context.Update(project.Name);
+                    _context.Update(project.Status);
+                    for (int i = 0; i < project.Contributions.Count; i++)
                     {
-                        var contributor = _context.ApplicationUsers.FirstOrDefault(u => u.Email == taskType.Contributions[i].ContributorEmail);
+                        var contributor = _context.ApplicationUsers.FirstOrDefault(u => u.Email == project.Contributions[i].ContributorEmail);
                         if (contributor == null)
                         {
                             continue;
                         }
                         else
                         {
-                            taskType.Contributions[i].UserId = contributor.Id;
-                            taskType.Contributions[i].TaskTypeId = taskType.Id;
-                            _context.Update(taskType.Contributions[i]);
+                            project.Contributions[i].UserId = contributor.Id;
+                            project.Contributions[i].ProjectId = project.Id;
+                            _context.Update(project.Contributions[i]);
                         }
                     }
 
-                    List<Contribution> contributions = _context.Contributions.Where(c => c.TaskTypeId == taskType.Id).ToList();
+                    List<Contribution> contributions = _context.Contributions.Where(c => c.ProjectId == project.Id).ToList();
                     for (int i = 0; i < contributions.Count(); i++) { 
-                        if (!taskType.Contributions.Exists(c2 => c2.Id == contributions[i].Id)) { 
+                        if (!project.Contributions.Exists(c2 => c2.Id == contributions[i].Id)) { 
                             _context.Contributions.Remove(contributions[i]);
                         }
                     }
@@ -169,7 +170,7 @@ namespace TimeTracker.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!TaskTypeExists(taskType.Id))
+                    if (!ProjectExists(project.Id))
                     {
                         return NotFound();
                     }
@@ -180,10 +181,10 @@ namespace TimeTracker.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            return View(taskType);
+            return View(project);
         }
 
-        // GET: TaskTypes/Delete/5
+        // GET: Projects/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -191,32 +192,32 @@ namespace TimeTracker.Controllers
                 return NotFound();
             }
 
-            var taskType = await _workContext.UserTaskTypes
+            var project = await _workContext.UserProjects
                 .FirstOrDefaultAsync(m => m.Id == id);
-            if (taskType == null)
+            if (project == null)
             {
                 return NotFound();
             }
 
-            return View(taskType);
+            return View(project);
         }
 
-        // POST: TaskTypes/Delete/5
+        // POST: Projects/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var taskType = await _workContext.UserTaskTypes.FirstOrDefaultAsync(m => m.Id == id);
-            _context.TaskTypes.Remove(taskType);
+            var project = await _workContext.UserProjects.FirstOrDefaultAsync(m => m.Id == id);
+            _context.Projects.Remove(project);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
 
 
-        private bool TaskTypeExists(int id)
+        private bool ProjectExists(int id)
         {
-            return _context.TaskTypes.Any(e => e.Id == id);
+            return _context.Projects.Any(e => e.Id == id);
         }
     }
 }

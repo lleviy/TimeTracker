@@ -21,9 +21,9 @@ namespace TimeTracker.Models
         public string Name { get; set; }
 
         [Required]
-        public int TaskTypeId { get; set; }
+        public int ProjectId { get; set; }
 
-        public TaskType TaskType { get; set; }
+        public Project Project { get; set; }
 
         public virtual List<Working> Workings { get; set; }
 

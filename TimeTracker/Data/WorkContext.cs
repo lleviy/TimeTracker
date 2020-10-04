@@ -10,11 +10,11 @@ namespace TimeTracker.Data
     {
         string UserId { get; }
         IQueryable<Task> UserTasks {get; }
-        IQueryable<TaskType> UserTaskTypes { get; }
+        IQueryable<Project> UserProjects { get; }
         IQueryable<Working> UserWorkings { get; }
         IQueryable<Contribution> UserContributions { get; }
-        IQueryable<TaskType> ContributedTaskTypes { get; }
-        IQueryable<TaskType> UserAndContributedTaskTypes { get; }
+        IQueryable<Project> ContributedProjects { get; }
+        IQueryable<Project> UserAndContributedProjects { get; }
         IQueryable<Task> ContributedTasks { get; }
         IQueryable<Task> UserAndContributedTasks { get; }
 
@@ -43,15 +43,15 @@ namespace TimeTracker.Data
         {
             get
             {
-                return _dbContext.Tasks.Where(t => t.UserId.Equals(UserId)).Include(t => t.TaskType).ThenInclude(t => t.Contributions);
+                return _dbContext.Tasks.Where(t => t.UserId.Equals(UserId)).Include(t => t.Project).ThenInclude(t => t.Contributions);
             }
         }
 
-        public IQueryable<TaskType> UserTaskTypes
+        public IQueryable<Project> UserProjects
         {
             get
             {
-                return _dbContext.TaskTypes.Where(t => t.UserId.Equals(UserId)).Include(p => p.Contributions);
+                return _dbContext.Projects.Where(t => t.UserId.Equals(UserId)).Include(p => p.Contributions);
             }
         }
 
@@ -71,20 +71,20 @@ namespace TimeTracker.Data
             }
         }
 
-        public IQueryable<TaskType> ContributedTaskTypes
+        public IQueryable<Project> ContributedProjects
         {
             get
             {
-                return _dbContext.TaskTypes.Include(p => p.Contributions)
+                return _dbContext.Projects.Include(p => p.Contributions)
                     .Where(p => p.Contributions.Any(c => c.UserId == UserId & c.ContributionConfirmed == true));
             }
         }
 
-        public IQueryable<TaskType> UserAndContributedTaskTypes
+        public IQueryable<Project> UserAndContributedProjects
         {
             get
             {
-                return ContributedTaskTypes.Concat(UserTaskTypes);
+                return ContributedProjects.Concat(UserProjects);
             }
         }
 
@@ -93,8 +93,8 @@ namespace TimeTracker.Data
         {
             get
             {
-                return _dbContext.Tasks.Include(t => t.TaskType).ThenInclude(t => t.Contributions)
-                    .Where(t => t.TaskType.Contributions.Any(c => c.UserId == UserId));
+                return _dbContext.Tasks.Include(t => t.Project).ThenInclude(t => t.Contributions)
+                    .Where(t => t.Project.Contributions.Any(c => c.UserId == UserId));
             }
         }
 

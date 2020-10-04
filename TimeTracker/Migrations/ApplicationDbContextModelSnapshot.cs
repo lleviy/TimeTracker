@@ -232,7 +232,7 @@ namespace TimeTracker.Migrations
                     b.Property<string>("ContributorEmail")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("TaskTypeId")
+                    b.Property<int>("ProjectId")
                         .HasColumnType("int");
 
                     b.Property<string>("UserId")
@@ -240,47 +240,14 @@ namespace TimeTracker.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TaskTypeId");
+                    b.HasIndex("ProjectId");
 
                     b.HasIndex("UserId");
 
                     b.ToTable("Contributions");
                 });
 
-            modelBuilder.Entity("TimeTracker.Models.Task", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<string>("ApplicationUserId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(300)")
-                        .HasMaxLength(300);
-
-                    b.Property<string>("Status")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("TaskTypeId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ApplicationUserId");
-
-                    b.HasIndex("TaskTypeId");
-
-                    b.ToTable("Tasks");
-                });
-
-            modelBuilder.Entity("TimeTracker.Models.TaskType", b =>
+            modelBuilder.Entity("TimeTracker.Models.Project", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -302,7 +269,40 @@ namespace TimeTracker.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("TaskTypes");
+                    b.ToTable("Projects");
+                });
+
+            modelBuilder.Entity("TimeTracker.Models.Task", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("ApplicationUserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(300)")
+                        .HasMaxLength(300);
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationUserId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("Tasks");
                 });
 
             modelBuilder.Entity("TimeTracker.Models.Working", b =>
@@ -392,14 +392,21 @@ namespace TimeTracker.Migrations
 
             modelBuilder.Entity("TimeTracker.Models.Contribution", b =>
                 {
-                    b.HasOne("TimeTracker.Models.TaskType", "TaskType")
+                    b.HasOne("TimeTracker.Models.Project", "Project")
                         .WithMany("Contributions")
-                        .HasForeignKey("TaskTypeId")
+                        .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("TimeTracker.Models.ApplicationUser", "ApplicationUser")
                         .WithMany("Contributions")
+                        .HasForeignKey("UserId");
+                });
+
+            modelBuilder.Entity("TimeTracker.Models.Project", b =>
+                {
+                    b.HasOne("TimeTracker.Models.ApplicationUser", "User")
+                        .WithMany()
                         .HasForeignKey("UserId");
                 });
 
@@ -409,18 +416,11 @@ namespace TimeTracker.Migrations
                         .WithMany()
                         .HasForeignKey("ApplicationUserId");
 
-                    b.HasOne("TimeTracker.Models.TaskType", "TaskType")
+                    b.HasOne("TimeTracker.Models.Project", "Project")
                         .WithMany("Tasks")
-                        .HasForeignKey("TaskTypeId")
+                        .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("TimeTracker.Models.TaskType", b =>
-                {
-                    b.HasOne("TimeTracker.Models.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId");
                 });
 
             modelBuilder.Entity("TimeTracker.Models.Working", b =>

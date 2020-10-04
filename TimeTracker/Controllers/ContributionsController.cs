@@ -24,7 +24,7 @@ namespace TimeTracker.Controllers
         // GET: Contributions
         public async Task<IActionResult> Index()
         {
-            var applicationDbContext = _workContext.UserContributions.Include(c => c.ApplicationUser).Include(c => c.TaskType);
+            var applicationDbContext = _workContext.UserContributions.Include(c => c.ApplicationUser).Include(c => c.Project);
             return View(await applicationDbContext.ToListAsync());
         }
 
@@ -34,7 +34,7 @@ namespace TimeTracker.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         public async Task<IActionResult> Accept(int taskTypeId, string userId)
         {
-            var contribution = await _workContext.UserContributions.FirstOrDefaultAsync(c => c.UserId == userId && c.TaskTypeId == taskTypeId);
+            var contribution = await _workContext.UserContributions.FirstOrDefaultAsync(c => c.UserId == userId && c.ProjectId == taskTypeId);
             if (contribution == null)
             {
                 return NotFound();
@@ -48,7 +48,7 @@ namespace TimeTracker.Controllers
         public async Task<IActionResult> Reject(int taskTypeId, string userId)
         {
 
-            var contribution = await _workContext.UserContributions.FirstOrDefaultAsync(c => c.UserId == userId && c.TaskTypeId == taskTypeId);
+            var contribution = await _workContext.UserContributions.FirstOrDefaultAsync(c => c.UserId == userId && c.ProjectId == taskTypeId);
             if (contribution == null)
             {
                 return NotFound();

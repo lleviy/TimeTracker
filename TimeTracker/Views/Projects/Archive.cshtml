@@ -1,4 +1,4 @@
-﻿@model IEnumerable<TimeTracker.Models.TaskType>
+﻿@model IEnumerable<TimeTracker.Models.Project>
 
 @{
     ViewData["Title"] = "Archive";
@@ -20,7 +20,7 @@
         {
         <tr>
             <td>
-                @Html.ActionLink(@item.Name, "Archive", "Tasks", new { taskTypeId = @item.Id })
+                @Html.ActionLink(@item.Name, "Archive", "Tasks", new { projectId = @item.Id })
             </td>
             <td>
                 <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |

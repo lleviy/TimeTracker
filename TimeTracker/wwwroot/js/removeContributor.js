@@ -11,7 +11,7 @@ function removeContributor(clickedElem) {
         contentType: false,
         dataType: 'HTML',
         type: "POST",
-        url: '/TaskTypes/RemoveContributor',
+        url: '/Projects/RemoveContributor',
         success: function (partialView) {
             console.log("partialView: " + partialView);
             $('#contributorsContainer').html(partialView);

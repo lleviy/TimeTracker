@@ -13,7 +13,7 @@
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.TaskType)
+                @Html.DisplayNameFor(model => model.Project)
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.ContributionConfirmed)
@@ -25,13 +25,13 @@
 @foreach (var item in Model) {
         <tr>
             <td>
-                @Html.DisplayFor(modelItem => item.TaskType.Name)
+                @Html.DisplayFor(modelItem => item.Project.Name)
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.ContributionConfirmed)
             </td>
             <td>
-                @Html.ActionLink("Reject", "Reject", new {userId = @item.UserId, taskTypeId = @item.TaskTypeId})
+                @Html.ActionLink("Reject", "Reject", new {userId = @item.UserId, projectId = @item.ProjectId})
             </td>
         </tr>
 }

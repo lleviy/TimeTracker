@@ -1,10 +1,10 @@
-﻿@model IEnumerable<TimeTracker.Models.TaskType>
+﻿@model IEnumerable<TimeTracker.Models.Project>
 
 @{
     ViewData["Title"] = "Index";
 }
 
-<h1>Task types</h1>
+<h1>Projects</h1>
 
 <p>
     <a asp-action="Create">Create New</a>
@@ -25,7 +25,7 @@
             { 
                 <tr>
                     <td>
-                        @Html.ActionLink(@item.Name, "Index", "Tasks", new { taskTypeId = @item.Id })
+                        @Html.ActionLink(@item.Name, "Index", "Tasks", new { projectId = @item.Id })
                     </td>
                     <td>
                         @if (ViewBag.CurrentUserId == item.UserId)

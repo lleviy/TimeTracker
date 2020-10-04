@@ -153,7 +153,7 @@ namespace TimeTracker.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "TaskTypes",
+                name: "Projects",
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
@@ -164,9 +164,9 @@ namespace TimeTracker.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_TaskTypes", x => x.Id);
+                    table.PrimaryKey("PK_Projects", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_TaskTypes_AspNetUsers_UserId",
+                        name: "FK_Projects_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
@@ -180,7 +180,7 @@ namespace TimeTracker.Migrations
                     Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     UserId = table.Column<string>(nullable: true),
-                    TaskTypeId = table.Column<int>(nullable: false),
+                    ProjectId = table.Column<int>(nullable: false),
                     ContributorEmail = table.Column<string>(nullable: true),
                     ContributionConfirmed = table.Column<bool>(nullable: false)
                 },
@@ -188,9 +188,9 @@ namespace TimeTracker.Migrations
                 {
                     table.PrimaryKey("PK_Contributions", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Contributions_TaskTypes_TaskTypeId",
-                        column: x => x.TaskTypeId,
-                        principalTable: "TaskTypes",
+                        name: "FK_Contributions_Projects_ProjectId",
+                        column: x => x.ProjectId,
+                        principalTable: "Projects",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
@@ -210,7 +210,7 @@ namespace TimeTracker.Migrations
                     UserId = table.Column<string>(nullable: true),
                     ApplicationUserId = table.Column<string>(nullable: true),
                     Name = table.Column<string>(maxLength: 300, nullable: false),
-                    TaskTypeId = table.Column<int>(nullable: false),
+                    ProjectId = table.Column<int>(nullable: false),
                     Status = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
@@ -223,9 +223,9 @@ namespace TimeTracker.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_Tasks_TaskTypes_TaskTypeId",
-                        column: x => x.TaskTypeId,
-                        principalTable: "TaskTypes",
+                        name: "FK_Tasks_Projects_ProjectId",
+                        column: x => x.ProjectId,
+                        principalTable: "Projects",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -300,13 +300,18 @@ namespace TimeTracker.Migrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Contributions_TaskTypeId",
+                name: "IX_Contributions_ProjectId",
                 table: "Contributions",
-                column: "TaskTypeId");
+                column: "ProjectId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Contributions_UserId",
                 table: "Contributions",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Projects_UserId",
+                table: "Projects",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
@@ -315,14 +320,9 @@ namespace TimeTracker.Migrations
                 column: "ApplicationUserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Tasks_TaskTypeId",
+                name: "IX_Tasks_ProjectId",
                 table: "Tasks",
-                column: "TaskTypeId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_TaskTypes_UserId",
-                table: "TaskTypes",
-                column: "UserId");
+                column: "ProjectId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Workings_ApplicationUserId",
@@ -365,7 +365,7 @@ namespace TimeTracker.Migrations
                 name: "Tasks");
 
             migrationBuilder.DropTable(
-                name: "TaskTypes");
+                name: "Projects");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
